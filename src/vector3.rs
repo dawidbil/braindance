@@ -1,3 +1,5 @@
+use crate::color::Color;
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Vector3 {
     pub x: f64,
@@ -8,6 +10,14 @@ pub struct Vector3 {
 impl Vector3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
+    }
+
+    pub fn neg(&self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 
     pub fn add(&self, other: &Vector3) -> Self {
@@ -61,6 +71,10 @@ impl Vector3 {
     pub fn normalize(&self) -> Self {
         let length = self.length();
         self.div(length)
+    }
+
+    pub fn to_color(&self) -> Color {
+        Color::new(self.x, self.y, self.z)
     }
 }
 
