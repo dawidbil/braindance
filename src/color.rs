@@ -12,6 +12,16 @@ fn check_color_value(x: f64) {
     }
 }
 
+fn linear_to_gamma(x: f64) -> f64 {
+    if x < 0.0 {
+        0.0
+    } else if x > 1.0 {
+        1.0
+    } else {
+        x.sqrt()
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Color {
     vec: Vector3,
@@ -85,9 +95,9 @@ impl Color {
         write!(
             out,
             "{} {} {}\n",
-            to_256(self.r()),
-            to_256(self.g()),
-            to_256(self.b())
+            to_256(linear_to_gamma(self.r())),
+            to_256(linear_to_gamma(self.g())),
+            to_256(linear_to_gamma(self.b()))
         )
     }
 }
