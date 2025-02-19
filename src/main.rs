@@ -1,21 +1,20 @@
 #![allow(dead_code)]
 
-use std::fs::File;
-use std::io::BufWriter;
-
-mod vector3;
-use vector3::Point3;
+use std::{fs::File, io::BufWriter};
 
 mod camera;
 mod color;
-use camera::Camera;
+mod hittable;
+mod hittables;
 mod ray;
 mod sphere;
 mod utils;
-use sphere::Sphere;
-mod hittables;
+mod vector3;
+
+use camera::Camera;
 use hittables::Hittables;
-mod hittable;
+use sphere::Sphere;
+use vector3::Point3;
 
 const IMAGE_WIDTH: u32 = 1600;
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
