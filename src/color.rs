@@ -31,6 +31,10 @@ impl Color {
     pub fn g(&self) -> f64 { self.vec.y }
     pub fn b(&self) -> f64 { self.vec.z }
 
+    pub fn neg(&self) -> Self {
+        Self { vec: self.vec.neg() }
+    }
+
     pub fn add(&self, other: &Color) -> Self {
         Self { vec: self.vec.add(&other.vec) }
     }
