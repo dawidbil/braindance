@@ -91,7 +91,7 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        if let Some(hit) = hittables.hit(ray, 0.0, f64::INFINITY) {
+        if let Some(hit) = hittables.hit(ray, 0.001, f64::INFINITY) {
             let direction = Vector3::random_in_hemisphere(&hit.normal);
             return self.ray_color(&Ray::new(hit.point, direction), hittables, depth - 1).mul(0.5);
         }
