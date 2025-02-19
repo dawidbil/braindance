@@ -1,7 +1,7 @@
-use crate::hittable::{Hittable, HitRecord};
+use crate::assert_near_eq;
+use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use crate::vector3::Point3;
-use crate::assert_near_eq;
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -54,4 +54,4 @@ impl Hittable for Sphere {
 
         None
     }
-} 
+}

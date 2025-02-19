@@ -6,12 +6,12 @@ use std::io::BufWriter;
 mod vector3;
 use vector3::Point3;
 
-mod color;
 mod camera;
+mod color;
 use camera::Camera;
 mod ray;
-mod utils;
 mod sphere;
+mod utils;
 use sphere::Sphere;
 mod hittables;
 use hittables::Hittables;
@@ -42,5 +42,7 @@ fn main() {
     hittables.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
     let file = File::create("image.ppm").unwrap();
     let mut writer = BufWriter::new(file);
-    camera.render(&mut writer, &hittables).expect("Failed to dump image");
+    camera
+        .render(&mut writer, &hittables)
+        .expect("Failed to dump image");
 }

@@ -12,7 +12,11 @@ pub struct HitRecord {
 impl HitRecord {
     pub fn new(point: Point3, outward_normal: Vector3, t: f64, ray_direction: Vector3) -> Self {
         let front_face = ray_direction.dot(&outward_normal) < 0.0;
-        let normal = if front_face { outward_normal } else { outward_normal.neg() };
+        let normal = if front_face {
+            outward_normal
+        } else {
+            outward_normal.neg()
+        };
         HitRecord {
             point,
             normal,
@@ -24,4 +28,4 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
-} 
+}
