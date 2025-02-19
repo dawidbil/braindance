@@ -1,3 +1,4 @@
+use rand::Rng;
 use crate::color::Color;
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -71,6 +72,36 @@ impl Vector3 {
     pub fn normalize(&self) -> Self {
         let length = self.length();
         self.div(length)
+    }
+
+    pub fn random(min: f64, max: f64) -> Self {
+        let mut rng = rand::thread_rng();
+        let x = rng.gen_range(min..max);
+        let y = rng.gen_range(min..max);
+        let z = rng.gen_range(min..max);
+        Self::new(x, y, z)
+    }
+
+    pub fn random_unit_vector() -> Self {
+        loop {
+            let p = Self::random(-1.0, 1.0);
+            let length = p.length();
+            if length <= 1e-160 {
+                continue;
+            }
+            if length <= 1.0 {
+                return p.div(length);
+            }
+        }
+    }
+
+    pub fn random_in_hemisphere(normal: &Vector3) -> Self {
+        let in_unit_sphere = Self::random_unit_vector();
+        if in_unit_sphere.dot(normal) > 0.0 {
+            in_unit_sphere
+        } else {
+            in_unit_sphere.neg()
+        }
     }
 
     pub fn to_color(&self) -> Color {

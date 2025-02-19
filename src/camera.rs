@@ -85,10 +85,8 @@ impl Camera {
 
     fn ray_color(&self, ray: &Ray, hittables: &Hittables) -> Color {
         if let Some(hit) = hittables.hit(ray, 0.0, f64::INFINITY) {
-            let normal = hit.normal;
-            return Vector3::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0)
-                .mul(0.5)
-                .to_color();
+            let direction = Vector3::random_in_hemisphere(&hit.normal);
+            return self.ray_color(&Ray::new(hit.point, direction), hittables).mul(0.5);
         }
 
         let unit_direction = ray.direction.normalize();
