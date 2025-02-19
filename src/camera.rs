@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
-
+use rand::Rng;
 use crate::color::Color;
 use crate::hittables::Hittables;
 use crate::ray::Ray;
@@ -15,6 +15,7 @@ pub struct Camera {
     pub viewport_width: f64,
     pub viewport_height: f64,
     pub focal_length: f64,
+    pub samples_per_pixel: u32,
     pub camera_center: Point3,
     pub viewport_u: Vector3,
     pub viewport_v: Vector3,
@@ -30,6 +31,7 @@ impl Camera {
         image_width: u32,
         viewport_height: f64,
         focal_length: f64,
+        samples_per_pixel: u32,
         camera_center: Point3,
     ) -> Self {
         let image_height = match (image_width as f64 / aspect_ratio) as u32 {
@@ -54,6 +56,7 @@ impl Camera {
             viewport_width,
             viewport_height,
             focal_length,
+            samples_per_pixel,
             camera_center,
             viewport_u,
             viewport_v,
@@ -64,12 +67,20 @@ impl Camera {
         }
     }
 
-    fn pixel_center(&self, i: u32, j: u32) -> Point3 {
-        let pixel_delta_u_i = self.pixel_delta_u.mul(i as f64);
-        let pixel_delta_v_j = self.pixel_delta_v.mul(j as f64);
-        self.pixel_upper_left
-            .add(&pixel_delta_u_i)
-            .add(&pixel_delta_v_j)
+    fn get_ray(&self, i: u32, j: u32) -> Ray {
+        let offset = self.sample_square();
+        let pixel_sample = self.pixel_upper_left
+            .add(&self.pixel_delta_u.mul(i as f64 + offset.x))
+            .add(&self.pixel_delta_v.mul(j as f64 + offset.y));
+        let ray_direction = pixel_sample.sub(&self.camera_center);
+        Ray::new(self.camera_center, ray_direction)
+    }
+
+    fn sample_square(&self) -> Vector3 {
+        let mut rng = rand::thread_rng();
+        let px = -0.5 + rng.gen::<f64>();
+        let py = -0.5 + rng.gen::<f64>();
+        Vector3::new(px, py, 0.0)
     }
 
     fn ray_color(&self, ray: &Ray, hittables: &Hittables) -> Color {
@@ -99,11 +110,13 @@ impl Camera {
         for j in 0..self.image_height {
             print!("\rScanlines remaining: {:>4}", self.image_height - j);
             for i in 0..self.image_width {
-                let pixel_center = self.pixel_center(i, j);
-                let ray_direction = pixel_center.sub(&self.camera_center);
-                let ray = Ray::new(self.camera_center, ray_direction);
-                let color = self.ray_color(&ray, &hittables);
-                color.dump(writer)?;
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for sample in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(i, j);
+                    pixel_color = pixel_color.add(&self.ray_color(&ray, &hittables));
+                }
+                pixel_color = pixel_color.div(self.samples_per_pixel as f64);
+                pixel_color.dump(writer)?;
             }
         }
         println!("\r{:-^30}", "Done");

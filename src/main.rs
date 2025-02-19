@@ -16,10 +16,11 @@ use hittables::Hittables;
 use sphere::Sphere;
 use vector3::Point3;
 
-const IMAGE_WIDTH: u32 = 1600;
+const IMAGE_WIDTH: u32 = 512;
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const VIEWPORT_HEIGHT: f64 = 2.0;
 const FOCAL_LENGTH: f64 = 1.0;
+const SAMPLES_PER_PIXEL: u32 = 10;
 const CAMERA_CENTER_TUPLE: (f64, f64, f64) = (0.0, 0.0, 0.0);
 
 fn main() {
@@ -33,6 +34,7 @@ fn main() {
         IMAGE_WIDTH,
         VIEWPORT_HEIGHT,
         FOCAL_LENGTH,
+        SAMPLES_PER_PIXEL,
         camera_center,
     );
     // println!("Camera: {:#?}", camera);
