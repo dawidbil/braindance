@@ -16,6 +16,7 @@ pub struct Camera {
     pub viewport_height: f64,
     pub focal_length: f64,
     pub samples_per_pixel: u32,
+    pub max_depth: u32,
     pub camera_center: Point3,
     pub viewport_u: Vector3,
     pub viewport_v: Vector3,
@@ -32,6 +33,7 @@ impl Camera {
         viewport_height: f64,
         focal_length: f64,
         samples_per_pixel: u32,
+        max_depth: u32,
         camera_center: Point3,
     ) -> Self {
         let image_height = match (image_width as f64 / aspect_ratio) as u32 {
@@ -57,6 +59,7 @@ impl Camera {
             viewport_height,
             focal_length,
             samples_per_pixel,
+            max_depth,
             camera_center,
             viewport_u,
             viewport_v,
@@ -83,10 +86,14 @@ impl Camera {
         Vector3::new(px, py, 0.0)
     }
 
-    fn ray_color(&self, ray: &Ray, hittables: &Hittables) -> Color {
+    fn ray_color(&self, ray: &Ray, hittables: &Hittables, depth: u32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
         if let Some(hit) = hittables.hit(ray, 0.0, f64::INFINITY) {
             let direction = Vector3::random_in_hemisphere(&hit.normal);
-            return self.ray_color(&Ray::new(hit.point, direction), hittables).mul(0.5);
+            return self.ray_color(&Ray::new(hit.point, direction), hittables, depth - 1).mul(0.5);
         }
 
         let unit_direction = ray.direction.normalize();
@@ -109,9 +116,9 @@ impl Camera {
             print!("\rScanlines remaining: {:>4}", self.image_height - j);
             for i in 0..self.image_width {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for sample in 0..self.samples_per_pixel {
+                for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    pixel_color = pixel_color.add(&self.ray_color(&ray, &hittables));
+                    pixel_color = pixel_color.add(&self.ray_color(&ray, &hittables, self.max_depth));
                 }
                 pixel_color = pixel_color.div(self.samples_per_pixel as f64);
                 pixel_color.dump(writer)?;

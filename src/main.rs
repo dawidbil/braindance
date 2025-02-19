@@ -21,6 +21,7 @@ const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const VIEWPORT_HEIGHT: f64 = 2.0;
 const FOCAL_LENGTH: f64 = 1.0;
 const SAMPLES_PER_PIXEL: u32 = 10;
+const MAX_DEPTH: u32 = 50;
 const CAMERA_CENTER_TUPLE: (f64, f64, f64) = (0.0, 0.0, 0.0);
 
 fn main() {
@@ -35,6 +36,7 @@ fn main() {
         VIEWPORT_HEIGHT,
         FOCAL_LENGTH,
         SAMPLES_PER_PIXEL,
+        MAX_DEPTH,
         camera_center,
     );
     // println!("Camera: {:#?}", camera);
