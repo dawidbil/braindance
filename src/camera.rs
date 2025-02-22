@@ -92,8 +92,15 @@ impl Camera {
         }
 
         if let Some(hit) = hittables.hit(ray, 0.001, f64::INFINITY) {
-            let direction = hit.normal.add(&Vector3::random_unit_vector());
-            return self.ray_color(&Ray::new(hit.point, direction), hittables, depth - 1).mul(0.5);
+            if let Some((attenuation, scattered)) = hit.material.scatter(ray, &hit) {
+                let color = self.ray_color(&scattered, hittables, depth - 1);
+                return Color::new(
+                    attenuation.r() * color.r(),
+                    attenuation.g() * color.g(),
+                    attenuation.b() * color.b(),
+                );
+            }
+            return Color::new(0.0, 0.0, 0.0);
         }
 
         let unit_direction = ray.direction.normalize();
