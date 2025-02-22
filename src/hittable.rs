@@ -1,16 +1,17 @@
 use crate::ray::Ray;
 use crate::vector3::{Point3, Vector3};
+use crate::material::Material;
 
-#[derive(Debug)]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub point: Point3,
     pub normal: Vector3,
     pub t: f64,
     pub front_face: bool,
+    pub material: &'a dyn Material,
 }
 
-impl HitRecord {
-    pub fn new(point: Point3, outward_normal: Vector3, t: f64, ray_direction: Vector3) -> Self {
+impl<'a> HitRecord<'a> {
+    pub fn new(point: Point3, outward_normal: Vector3, t: f64, ray_direction: Vector3, material: &'a dyn Material) -> Self {
         let front_face = ray_direction.dot(&outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
@@ -22,6 +23,7 @@ impl HitRecord {
             normal,
             t,
             front_face,
+            material,
         }
     }
 }
