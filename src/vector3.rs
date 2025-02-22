@@ -104,7 +104,16 @@ impl Vector3 {
         }
     }
 
-    pub fn to_color(&self) -> Color {
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
+    }
+
+    pub fn reflect(vector: &Vector3, normal: &Vector3) -> Self {
+        vector.sub(&normal.mul(2.0 * vector.dot(normal)))
+    }
+
+    pub fn to_color(self) -> Color {
         Color::new(self.x, self.y, self.z)
     }
 }
