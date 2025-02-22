@@ -2,19 +2,20 @@ use crate::assert_near_eq;
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use crate::vector3::Point3;
+use crate::material::Material;
 
-#[derive(Debug)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    material: Box<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
+    pub fn new(center: Point3, radius: f64, material: Box<dyn Material>) -> Self {
         if radius <= 0.0 {
             panic!("Radius must be positive");
         }
-        Sphere { center, radius }
+        Sphere { center, radius, material }
     }
 
     fn is_t_valid(&self, t: f64, ray_tmin: f64, ray_tmax: f64) -> bool {
@@ -25,7 +26,7 @@ impl Sphere {
         let point = ray.at(t);
         assert_near_eq!(point.sub(&self.center).length(), self.radius);
         let outward_normal = point.sub(&self.center).div(self.radius);
-        HitRecord::new(point, outward_normal, t, ray.direction)
+        HitRecord::new(point, outward_normal, t, ray.direction, &*self.material)
     }
 }
 
