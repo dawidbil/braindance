@@ -16,9 +16,14 @@ pub struct Camera {
     pub viewport_height: f64,
     pub focal_length: f64,
     pub vfov: f64,
+    pub lookfrom: Point3,
+    pub lookat: Point3,
+    pub vup: Vector3,
+    pub camera_u: Vector3,
+    pub camera_v: Vector3,
+    pub camera_w: Vector3,
     pub samples_per_pixel: u32,
     pub max_depth: u32,
-    pub camera_center: Point3,
     pub viewport_u: Vector3,
     pub viewport_v: Vector3,
     pub pixel_delta_u: Vector3,
@@ -31,29 +36,34 @@ impl Camera {
     pub fn new(
         aspect_ratio: f64,
         image_width: u32,
-        focal_length: f64,
         vfov: f64,
+        lookfrom: Point3,
+        lookat: Point3,
+        vup: Vector3,
         samples_per_pixel: u32,
         max_depth: u32,
-        camera_center: Point3,
     ) -> Self {
         let image_height = match (image_width as f64 / aspect_ratio) as u32 {
             0 => 1,
             height => height,
         };
         let viewport_aspect_ratio = image_width as f64 / image_height as f64;
+        let focal_length = lookfrom.sub(&lookat).length();
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * viewport_aspect_ratio;
-        let viewport_u = Vector3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vector3::new(0.0, -viewport_height, 0.0);
+        let camera_w = lookfrom.sub(&lookat).normalize();
+        let camera_u = vup.cross(&camera_w).normalize();
+        let camera_v = camera_w.cross(&camera_u);
+        let viewport_u = camera_u.mul(viewport_width);
+        let viewport_v = camera_v.neg().mul(viewport_height);
         let pixel_delta_u = viewport_u.div(image_width as f64);
         let pixel_delta_v = viewport_v.div(image_height as f64);
-        let viewport_upper_left = camera_center
-            .sub(&Vector3::new(0.0, 0.0, focal_length))
+        let viewport_upper_left = lookfrom
             .sub(&viewport_u.div(2.0))
-            .sub(&viewport_v.div(2.0));
+            .sub(&viewport_v.div(2.0))
+            .sub(&camera_w.mul(focal_length));
         let pixel_upper_left = viewport_upper_left.add(&pixel_delta_u.add(&pixel_delta_v).mul(0.5));
         Self {
             aspect_ratio,
@@ -62,16 +72,21 @@ impl Camera {
             viewport_width,
             viewport_height,
             focal_length,
+            vfov,
+            lookfrom,
+            lookat,
+            vup,
+            camera_u,
+            camera_v,
+            camera_w,
             samples_per_pixel,
             max_depth,
-            camera_center,
             viewport_u,
             viewport_v,
             pixel_delta_u,
             pixel_delta_v,
             viewport_upper_left,
             pixel_upper_left,
-            vfov,
         }
     }
 
@@ -80,8 +95,8 @@ impl Camera {
         let pixel_sample = self.pixel_upper_left
             .add(&self.pixel_delta_u.mul(i as f64 + offset.x))
             .add(&self.pixel_delta_v.mul(j as f64 + offset.y));
-        let ray_direction = pixel_sample.sub(&self.camera_center);
-        Ray::new(self.camera_center, ray_direction)
+        let ray_direction = pixel_sample.sub(&self.lookfrom);
+        Ray::new(self.lookfrom, ray_direction)
     }
 
     fn sample_square(&self) -> Vector3 {
