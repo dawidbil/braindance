@@ -3,14 +3,21 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vector3::Vector3;
 use crate::hittable::HitRecord;
+use rand::Rng;
 
 pub struct Dielectric {
     pub refraction_index: f64,
 }
 
 impl Dielectric {
-    pub fn new(index_of_refraction: f64) -> Self {
-        Self { refraction_index: index_of_refraction }
+    pub fn new(refraction_index: f64) -> Self {
+        Self { refraction_index }
+    }
+
+    fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
+        let r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        let r0_squared = r0 * r0;
+        r0_squared + (1.0 - r0_squared) * (1.0 - cosine).powi(5)
     }
 }
 
@@ -27,7 +34,9 @@ impl Material for Dielectric {
         let cos_theta = unit_direction.neg().dot(&hit_record.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
-        let direction = if refraction_ratio * sin_theta > 1.0 {
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let random_double = rand::thread_rng().gen_range(0.0..1.0);
+        let direction = if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > random_double {
             Vector3::reflect(&unit_direction, &hit_record.normal)
         } else {
             Vector3::refract(&unit_direction, &hit_record.normal, refraction_ratio)
