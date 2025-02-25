@@ -113,6 +113,13 @@ impl Vector3 {
         vector.sub(&normal.mul(2.0 * vector.dot(normal)))
     }
 
+    pub fn refract(vector: &Vector3, normal: &Vector3, etai_over_etat: f64) -> Self {
+        let cos_theta = vector.neg().dot(normal).min(1.0);
+        let r_out_perpendicular = normal.mul(cos_theta).add(&vector).mul(etai_over_etat);
+        let r_out_parallel = normal.mul(-((1.0 - r_out_perpendicular.dot(&r_out_perpendicular)).abs().sqrt()));
+        r_out_perpendicular.add(&r_out_parallel)
+    }
+
     pub fn to_color(self) -> Color {
         Color::new(self.x, self.y, self.z)
     }
