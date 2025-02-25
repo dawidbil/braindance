@@ -27,9 +27,11 @@ use dielectric::Dielectric;
 
 const IMAGE_WIDTH: u32 = 512;
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const VFOW: f64 = 20.0;
+const VFOV: f64 = 20.0;
 const SAMPLES_PER_PIXEL: u32 = 100;
 const MAX_DEPTH: u32 = 50;
+const DEFOCUS_ANGLE: f64 = 10.0;
+const FOCUS_DISTANCE: f64 = 3.4;
 
 fn main() {
     let lookfrom = Point3::new(-2.0, 2.0, 1.0);
@@ -38,14 +40,15 @@ fn main() {
     let camera = Camera::new(
         ASPECT_RATIO,
         IMAGE_WIDTH,
-        VFOW,
+        VFOV,
         lookfrom,
         lookat,
         vup,
         SAMPLES_PER_PIXEL,
         MAX_DEPTH,
+        DEFOCUS_ANGLE,
+        FOCUS_DISTANCE,
     );
-    println!("Camera: {:#?}", camera);
     let material_ground = Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
     let material_center = Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
     let material_left = Box::new(Dielectric::new(1.5));
@@ -64,4 +67,5 @@ fn main() {
     camera
         .render(&mut writer, &hittables)
         .expect("Failed to dump image");
+    println!("Camera: {:#?}", camera);
 }
