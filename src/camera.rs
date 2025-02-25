@@ -14,7 +14,6 @@ pub struct Camera {
     pub image_height: u32,
     pub viewport_width: f64,
     pub viewport_height: f64,
-    pub focal_length: f64,
     pub vfov: f64,
     pub lookfrom: Point3,
     pub lookat: Point3,
@@ -30,6 +29,10 @@ pub struct Camera {
     pub pixel_delta_v: Vector3,
     pub viewport_upper_left: Point3,
     pub pixel_upper_left: Point3,
+    pub defocus_angle: f64,
+    pub focus_distance: f64,
+    pub defocus_disk_u: Vector3,
+    pub defocus_disk_v: Vector3,
 }
 
 impl Camera {
@@ -42,16 +45,17 @@ impl Camera {
         vup: Vector3,
         samples_per_pixel: u32,
         max_depth: u32,
+        defocus_angle: f64,
+        focus_distance: f64,
     ) -> Self {
         let image_height = match (image_width as f64 / aspect_ratio) as u32 {
             0 => 1,
             height => height,
         };
         let viewport_aspect_ratio = image_width as f64 / image_height as f64;
-        let focal_length = lookfrom.sub(&lookat).length();
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * focus_distance;
         let viewport_width = viewport_height * viewport_aspect_ratio;
         let camera_w = lookfrom.sub(&lookat).normalize();
         let camera_u = vup.cross(&camera_w).normalize();
@@ -63,15 +67,17 @@ impl Camera {
         let viewport_upper_left = lookfrom
             .sub(&viewport_u.div(2.0))
             .sub(&viewport_v.div(2.0))
-            .sub(&camera_w.mul(focal_length));
+            .sub(&camera_w.mul(focus_distance));
         let pixel_upper_left = viewport_upper_left.add(&pixel_delta_u.add(&pixel_delta_v).mul(0.5));
+        let defocus_radius = focus_distance * (defocus_angle.to_radians() / 2.0).tan();
+        let defocus_disk_u = camera_u.mul(defocus_radius);
+        let defocus_disk_v = camera_v.mul(defocus_radius);
         Self {
             aspect_ratio,
             image_width,
             image_height,
             viewport_width,
             viewport_height,
-            focal_length,
             vfov,
             lookfrom,
             lookat,
@@ -87,6 +93,10 @@ impl Camera {
             pixel_delta_v,
             viewport_upper_left,
             pixel_upper_left,
+            defocus_angle,
+            focus_distance,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -95,8 +105,13 @@ impl Camera {
         let pixel_sample = self.pixel_upper_left
             .add(&self.pixel_delta_u.mul(i as f64 + offset.x))
             .add(&self.pixel_delta_v.mul(j as f64 + offset.y));
-        let ray_direction = pixel_sample.sub(&self.lookfrom);
-        Ray::new(self.lookfrom, ray_direction)
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.lookfrom
+        } else {
+            self.defocus_disk_sample()
+        };
+        let ray_direction = pixel_sample.sub(&ray_origin);
+        Ray::new(ray_origin, ray_direction)
     }
 
     fn sample_square(&self) -> Vector3 {
@@ -104,6 +119,11 @@ impl Camera {
         let px = -0.5 + rng.gen::<f64>();
         let py = -0.5 + rng.gen::<f64>();
         Vector3::new(px, py, 0.0)
+    }
+
+    fn defocus_disk_sample(&self) -> Vector3 {
+        let p = Vector3::random_in_unit_disk();
+        self.defocus_disk_u.mul(p.x).add(&self.defocus_disk_v.mul(p.y)).add(&self.lookfrom)
     }
 
     fn ray_color(&self, ray: &Ray, hittables: &Hittables, depth: u32) -> Color {
